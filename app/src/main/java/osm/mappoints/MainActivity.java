@@ -3,6 +3,7 @@ package osm.mappoints;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationListener;
@@ -62,6 +63,31 @@ public class MainActivity extends AppCompatActivity {
 
         // maps do not load when commented - important! set your user agent to prevent getting banned from the osm servers
         Configuration.getInstance().setUserAgentValue(getPackageName());
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
+            }
+        };
+
 
         fab = findViewById(R.id.fab);
 
