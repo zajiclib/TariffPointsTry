@@ -9,6 +9,10 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -42,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
     private Location mLocation;
 
     private ArrayList<GeoPoint> stationsNearMe;
+    private BoundingBox currentScreen;
+    private FloatingActionButton fab;
 
 
     @Override
@@ -57,14 +63,18 @@ public class MainActivity extends AppCompatActivity {
         // maps do not load when commented - important! set your user agent to prevent getting banned from the osm servers
         Configuration.getInstance().setUserAgentValue(getPackageName());
 
+        fab = findViewById(R.id.fab);
+
         mMapView = findViewById(R.id.map);
         mMapView.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE);
 //        mMapView.setBuiltInZoomControls(true); // deprecated
         mMapView.setMultiTouchControls(true);
         mMapController = (MapController) mMapView.getController();
-        mMapController.setZoom(18);
+        mMapController.setZoom(19);
         GeoPoint gPt = new GeoPoint(50.77128781004221, 15.058581226261822);
         mMapController.setCenter(gPt);
+
+        Log.d(TAG, "onCreate: " + mMapView.getZoomLevelDouble());
 
         Log.d(TAG, "onCreate: stations near me count: " + stationsNearMe.size());
 
@@ -73,10 +83,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onScroll(ScrollEvent event) {
 
-                BoundingBox currentScreen = mMapView.getBoundingBox();
+                currentScreen = mMapView.getBoundingBox();
 
                 for (int i = 0; i < stationsNearMe.size(); i++) {
-                    if (isGeoPointInBoundingBox(currentScreen, stationsNearMe.get(i))) {
+                    if (MapUtils.isGeoPointInBoundingBox(currentScreen, stationsNearMe.get(i))) {
                         Marker startMarker = new Marker(mMapView);
                         startMarker.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.map_marker));
 //                        startMarker.setImage(); icon in image
@@ -94,11 +104,34 @@ public class MainActivity extends AppCompatActivity {
             }
         }, 500));
 
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (currentScreen == null) return;
+
+                Toast.makeText(MainActivity.this, "distance - " + MapUtils.distanceBetweenTwoPoints(currentScreen), Toast.LENGTH_SHORT).show();
+                Marker startMarker = new Marker(mMapView);
+                startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+
+                GeoPoint point = MapUtils.getTopLeftGeoPoint(currentScreen);
+                startMarker.setPosition(point);
+                startMarker.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.map_point));
+                mMapView.getOverlays().add(startMarker);
+
+
+                Marker startMarker2 = new Marker(mMapView);
+                startMarker2.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                GeoPoint newGp = MapUtils.getBottomRightGeoPoint(currentScreen);
+                startMarker2.setPosition(newGp);
+                startMarker2.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.map_point));
+
+                mMapView.getOverlays().add(startMarker2);
+            }
+        });
+
     }
 
-    private static boolean isGeoPointInBoundingBox(BoundingBox boundingBox, GeoPoint geoPoint) {
-        return boundingBox.contains(geoPoint);
-    }
 
     // 50.77128781004221, 15.058581226261822
     // 50.771396371584174, 15.067679278266475

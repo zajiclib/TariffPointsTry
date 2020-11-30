@@ -16,5 +16,20 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/map_marker"
+        android:id="@+id/fab"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="10dp"
+        android:layout_marginEnd="10dp"
+        android:contentDescription="@string/samples"
+        android:backgroundTint="@android:color/darker_gray"
+        android:outlineAmbientShadowColor="@android:color/darker_gray"
+        app:borderWidth="0dp"
+        />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
