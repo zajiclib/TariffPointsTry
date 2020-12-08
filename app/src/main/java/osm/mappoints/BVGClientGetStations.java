@@ -21,7 +21,7 @@ public class BVGClientGetStations implements Callback {
 //    Login password: Dh9uNjSk7vHTNIO33NTYNB3dfugsLsJw
 //    Auhorization API KEY: Dh9uNjSk7vHTNIO33NTYNB3dfugsLsJw
 
-    
+
     private static final String LOG_TAG = "bvgclientgetstations";
     private OkHttpClient okHttpClient;
     private ChooseStartingStationActivity activity;
