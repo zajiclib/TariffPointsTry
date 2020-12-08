@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -29,16 +28,14 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapController;
 import org.osmdroid.util.BoundingBox;
 import org.osmdroid.views.overlay.Marker;
-import org.osmdroid.views.overlay.Overlay;
-import org.osmdroid.views.overlay.OverlayItem;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 
-public class MainActivity extends AppCompatActivity {
+public class ChooseStartingStationActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "ChooseStartingStationActivity";
     private MapView mMapView;
     private MapController mMapController;
 
@@ -46,7 +43,9 @@ public class MainActivity extends AppCompatActivity {
     private LocationListener locationListener;
     private GeoPoint mLocation;
 
-    private ArrayList<GeoPoint> stationsNearMe;
+    private ArrayList<GeoPoint> geoPoints;
+    private boolean firstDraw = true;
+    private ArrayList<Station> stationsNearMe;
     private BoundingBox currentScreen;
     private FloatingActionButton fab;
 
@@ -63,56 +62,62 @@ public class MainActivity extends AppCompatActivity {
 //        mMapView.setBuiltInZoomControls(true); // deprecated
         mMapView.setMultiTouchControls(true);
 
+        // TODO generating places
         // testing purposes
-        stationsNearMe = new ArrayList<>();
-        stationsNearMe = generateTestingGeoPoints();
+//        geoPoints = new ArrayList<>();
+//        geoPoints = generateTestingGeoPoints();
+
+
+        parseStationsNearMeIntoArrayList(true);
+
+        Log.d(TAG, "onCreate: StationsArrayList size - " + stationsNearMe.size());
 
         // maps do not load when commented - important! set your user agent to prevent getting banned from the osm servers
         Configuration.getInstance().setUserAgentValue(getPackageName());
 
         mMapController = (MapController) mMapView.getController();
         mMapController.setZoom(19);
+        mLocation = new GeoPoint(52.51918121785197, 13.384318801552391);
+        mMapController.setCenter(mLocation);
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-
-                // in the first occurence
-                if (mLocation == null)  {
-                    mLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
-                    return;
-                }
-
-                GeoPoint newProvidedLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
-
-                if (MapUtils.distanceInMeters(newProvidedLocation, mLocation) > 500) {
-                    mLocation = newProvidedLocation;
-                }
-
-                mMapController.setCenter(mLocation);
+//
+                // TODO later uncomment for getting real location
+//                // in the first occurence
+//                if (mLocation == null)  {
+//                    mLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
+//                    return;
+//                }
+//
+//                GeoPoint newProvidedLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
+//
+//                if (MapUtils.distanceInMeters(newProvidedLocation, mLocation) > 500) {
+//                    mLocation = newProvidedLocation;
+//                }
+//
+//                mMapController.setCenter(mLocation);
             }
 
             @Override
             public void onStatusChanged(String provider, int status, Bundle extras) {
-
             }
 
             @Override
             public void onProviderEnabled(String provider) {
-
             }
 
             @Override
             public void onProviderDisabled(String provider) {
-
             }
         };
 
-        Log.d(TAG, "onCreate: " + mMapView.getZoomLevelDouble());
-
-        Log.d(TAG, "onCreate: stations near me count: " + stationsNearMe.size());
+//        Log.d(TAG, "onCreate: " + mMapView.getZoomLevelDouble());
+//
+//        Log.d(TAG, "onCreate: stations near me count: " + geoPoints.size());
 
 
         mMapView.addMapListener(new DelayedMapListener(new MapListener() {
@@ -121,16 +126,9 @@ public class MainActivity extends AppCompatActivity {
 
                 currentScreen = mMapView.getBoundingBox();
 
-                for (int i = 0; i < stationsNearMe.size(); i++) {
-                    if (MapUtils.isGeoPointInBoundingBox(currentScreen, stationsNearMe.get(i))) {
-                        Marker startMarker = new Marker(mMapView);
-                        startMarker.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.map_marker));
-//                        startMarker.setImage(); icon in image
-                        startMarker.setPosition(stationsNearMe.get(i));
-                        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-                        mMapView.getOverlays().add(startMarker);
-                    }
-                }
+                if (mLocation == null || currentScreen == null) return false;
+
+
                 return false;
             }
 
@@ -138,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onZoom(ZoomEvent event) {
                 return false;
             }
-        }, 500));
+        }, 200));
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -146,13 +144,13 @@ public class MainActivity extends AppCompatActivity {
 
                 if (currentScreen == null) return;
 
-                Toast.makeText(MainActivity.this, "distance - " + MapUtils.distanceBetweenTwoPoints(currentScreen), Toast.LENGTH_SHORT).show();
+                Toast.makeText(ChooseStartingStationActivity.this, "distance - " + MapUtils.distanceBetweenTwoPoints(currentScreen), Toast.LENGTH_SHORT).show();
                 Marker startMarker = new Marker(mMapView);
                 startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
 
                 GeoPoint point = MapUtils.getTopLeftGeoPoint(currentScreen);
                 startMarker.setPosition(point);
-                startMarker.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.map_point));
+                startMarker.setIcon(ContextCompat.getDrawable(ChooseStartingStationActivity.this, R.drawable.map_point));
                 mMapView.getOverlays().add(startMarker);
 
 
@@ -160,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
                 startMarker2.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
                 GeoPoint newGp = MapUtils.getBottomRightGeoPoint(currentScreen);
                 startMarker2.setPosition(newGp);
-                startMarker2.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.map_point));
+                startMarker2.setIcon(ContextCompat.getDrawable(ChooseStartingStationActivity.this, R.drawable.map_point));
 
                 mMapView.getOverlays().add(startMarker2);
             }
@@ -168,6 +166,46 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (locationManager != null && locationListener != null) {
+            locationManager.removeUpdates(locationListener);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // for osm 6+
+        mMapView.onResume();
+    }
+
+    public void drawStations() {
+        if (firstDraw) {
+            for (int i = 0; i < stationsNearMe.size(); i++) {
+                Station currentStation = stationsNearMe.get(i);
+                Marker startMarker = new Marker(mMapView);
+                startMarker.setIcon(ContextCompat.getDrawable(ChooseStartingStationActivity.this, R.drawable.station));
+//                        startMarker.setImage(); icon in image
+                startMarker.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
+                    @Override
+                    public boolean onMarkerClick(Marker marker, MapView mapView) {
+                        Toast.makeText(ChooseStartingStationActivity.this, "Clicked on station - " + currentStation.toString(), Toast.LENGTH_LONG).show();
+                        return false;
+                    }
+                });
+                startMarker.setId(currentStation.getId());
+                startMarker.setPosition(currentStation.getStationLocation());
+                startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                currentStation.setCurrentlyDisplayed(true);
+                mMapView.getOverlays().add(startMarker);
+            }
+
+            firstDraw = false;
+        }
+    }
 
     // 50.77128781004221, 15.058581226261822
     // 50.771396371584174, 15.067679278266475
@@ -219,7 +257,7 @@ public class MainActivity extends AppCompatActivity {
      * from response data
      */
     public void parseStationsNearMeIntoArrayList() {
-        stationsNearMe = new ArrayList<>();
+        geoPoints = new ArrayList<>();
 
         String strArray = getJsonArrayString();
 
@@ -234,7 +272,46 @@ public class MainActivity extends AppCompatActivity {
 
                 GeoPoint gp = new GeoPoint(latitude, longitude);
 
-                stationsNearMe.add(gp);
+                geoPoints.add(gp);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Parsing json into arraylist of {@link Station}
+     * from response data
+     */
+    public void parseStationsNearMeIntoArrayList(boolean parseForStations) {
+        if (!parseForStations) {
+            parseStationsNearMeIntoArrayList();
+            return;
+        }
+
+        stationsNearMe = new ArrayList<>();
+
+        String strArray = getJsonArrayString();
+
+        try {
+            JSONArray jsonArray = new JSONArray(strArray);
+
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject station = jsonArray.getJSONObject(i);
+                String id, name, description, zone;
+
+                id = station.getString("id");
+                name = station.getString("name");
+                zone = station.getString("zoneShortDescription");
+
+                JSONObject location = station.getJSONObject("location");
+
+                double longitude = location.getDouble("longitude");
+                double latitude = location.getDouble("latitude");
+
+                GeoPoint gp = new GeoPoint(latitude, longitude);
+
+                stationsNearMe.add(new Station(id, name, zone, gp));
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -244,6 +321,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Returning json string
+     *
      * @return String with json data taken from response
      */
     private String getJsonArrayString() {

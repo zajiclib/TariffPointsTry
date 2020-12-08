@@ -17,7 +17,7 @@
         android:hardwareAccelerated="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.MapPoints">
-        <activity android:name=".MainActivity">
+        <activity android:name=".ChooseStartingStationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

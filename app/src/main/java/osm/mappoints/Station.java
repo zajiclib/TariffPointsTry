@@ -1,5 +1,7 @@
 package osm.mappoints;
 
+import androidx.annotation.NonNull;
+
 import org.osmdroid.util.GeoPoint;
 
 /**
@@ -9,21 +11,38 @@ public class Station {
 
     private String id;
     private String name;
-    private String description;
+
     private String zone;
+    private String zoneId;
     private GeoPoint stationLocation;
+    private boolean isCurrentlyDisplayed = false;
 
 
     public Station(GeoPoint point) {
         this.stationLocation = point;
     }
 
-    public Station(String id, String name, String description, String zone, GeoPoint stationLocation) {
+    public Station(String id, String name, String zone, GeoPoint stationLocation) {
         this.id = id;
         this.name = name;
-        this.description = description;
         this.zone = zone;
         this.stationLocation = stationLocation;
+    }
+
+    public boolean isCurrentlyDisplayed() {
+        return isCurrentlyDisplayed;
+    }
+
+    public void setCurrentlyDisplayed(boolean currentlyDisplayed) {
+        this.isCurrentlyDisplayed = currentlyDisplayed;
+    }
+
+    public String getZoneId() {
+        return zoneId;
+    }
+
+    public void setZoneId(String zoneId) {
+        this.zoneId = zoneId;
     }
 
     public String getId() {
@@ -42,14 +61,6 @@ public class Station {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public String getZone() {
         return zone;
     }
@@ -66,5 +77,9 @@ public class Station {
         this.stationLocation = stationLocation;
     }
 
-
+    @NonNull
+    @Override
+    public String toString() {
+        return "id: "+ id + "; name: " + name + "; zone: " + zone;
+    }
 }
