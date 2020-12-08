@@ -81,4 +81,21 @@ public class MapUtils {
     public static int distanceInMeters(double lat1, double long1, double lat2, double long2) {
         return (int) (1000D * distanceBetweenTwoPoints(lat1, long1, lat2, long2));
     }
+
+    /**
+     * calculate distance between two points in meters from two geo points
+     * @param firstPoint first geo point
+     * @param secondPoint second geo point to take in
+     * @return
+     */
+    public static int distanceInMeters(GeoPoint firstPoint, GeoPoint secondPoint) {
+        double lat1, long1, lat2, long2;
+
+        lat1 = firstPoint.getLatitude();
+        long1 = firstPoint.getLongitude();
+        lat2 = secondPoint.getLatitude();
+        long2 = secondPoint.getLongitude();
+
+        return (int) (1000D * distanceBetweenTwoPoints(lat1, long1, lat2, long2));
+    }
 }

@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
     private LocationManager locationManager;
     private LocationListener locationListener;
-    private Location mLocation;
+    private GeoPoint mLocation;
 
     private ArrayList<GeoPoint> stationsNearMe;
     private BoundingBox currentScreen;
@@ -56,20 +56,44 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        fab = findViewById(R.id.fab);
+
+        mMapView = findViewById(R.id.map);
+        mMapView.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE);
+//        mMapView.setBuiltInZoomControls(true); // deprecated
+        mMapView.setMultiTouchControls(true);
+
+        // testing purposes
         stationsNearMe = new ArrayList<>();
-
         stationsNearMe = generateTestingGeoPoints();
-
 
         // maps do not load when commented - important! set your user agent to prevent getting banned from the osm servers
         Configuration.getInstance().setUserAgentValue(getPackageName());
 
+        mMapController = (MapController) mMapView.getController();
+        mMapController.setZoom(19);
+
+
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
 
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
 
+                // in the first occurence
+                if (mLocation == null)  {
+                    mLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
+                    return;
+                }
+
+                GeoPoint newProvidedLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
+
+                if (MapUtils.distanceInMeters(newProvidedLocation, mLocation) > 500) {
+                    mLocation = newProvidedLocation;
+                }
+
+                mMapController.setCenter(mLocation);
             }
 
             @Override
@@ -87,18 +111,6 @@ public class MainActivity extends AppCompatActivity {
 
             }
         };
-
-
-        fab = findViewById(R.id.fab);
-
-        mMapView = findViewById(R.id.map);
-        mMapView.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE);
-//        mMapView.setBuiltInZoomControls(true); // deprecated
-        mMapView.setMultiTouchControls(true);
-        mMapController = (MapController) mMapView.getController();
-        mMapController.setZoom(19);
-        GeoPoint gPt = new GeoPoint(50.77128781004221, 15.058581226261822);
-        mMapController.setCenter(gPt);
 
         Log.d(TAG, "onCreate: " + mMapView.getZoomLevelDouble());
 
