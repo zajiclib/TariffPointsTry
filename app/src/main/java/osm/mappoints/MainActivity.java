@@ -73,9 +73,7 @@ public class MainActivity extends AppCompatActivity {
         mMapController = (MapController) mMapView.getController();
         mMapController.setZoom(19);
 
-
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
 
         locationListener = new LocationListener() {
             @Override
