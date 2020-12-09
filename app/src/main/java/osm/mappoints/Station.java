@@ -80,6 +80,6 @@ public class Station {
     @NonNull
     @Override
     public String toString() {
-        return "id: "+ id + "; name: " + name + "; zone: " + zone;
+        return "id: "+ id + "; name: " + name + "; zone: " + zone + "\n";
     }
 }

@@ -1,9 +1,13 @@
 package osm.mappoints;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -82,10 +86,25 @@ public class ChooseStartingStationActivity extends AppCompatActivity {
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        locationManager.requestLocationUpdates("network", 1000, 0, locationListener); //FUSED_PROVIDER, NETWORK_PROVIDER
+
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
 //
+                mLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
+
+                mMapController.setCenter(mLocation);
                 // TODO later uncomment for getting real location
 //                // in the first occurence
 //                if (mLocation == null)  {
@@ -142,25 +161,29 @@ public class ChooseStartingStationActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                if (currentScreen == null) return;
+                Intent intent = new Intent(ChooseStartingStationActivity.this, ViewerJSONActivity.class);
 
-                Toast.makeText(ChooseStartingStationActivity.this, "distance - " + MapUtils.distanceBetweenTwoPoints(currentScreen), Toast.LENGTH_SHORT).show();
-                Marker startMarker = new Marker(mMapView);
-                startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+                startActivity(intent);
 
-                GeoPoint point = MapUtils.getTopLeftGeoPoint(currentScreen);
-                startMarker.setPosition(point);
-                startMarker.setIcon(ContextCompat.getDrawable(ChooseStartingStationActivity.this, R.drawable.map_point));
-                mMapView.getOverlays().add(startMarker);
-
-
-                Marker startMarker2 = new Marker(mMapView);
-                startMarker2.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-                GeoPoint newGp = MapUtils.getBottomRightGeoPoint(currentScreen);
-                startMarker2.setPosition(newGp);
-                startMarker2.setIcon(ContextCompat.getDrawable(ChooseStartingStationActivity.this, R.drawable.map_point));
-
-                mMapView.getOverlays().add(startMarker2);
+//                if (currentScreen == null) return;
+//
+//                Toast.makeText(ChooseStartingStationActivity.this, "distance - " + MapUtils.distanceBetweenTwoPoints(currentScreen), Toast.LENGTH_SHORT).show();
+//                Marker startMarker = new Marker(mMapView);
+//                startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+//
+//                GeoPoint point = MapUtils.getTopLeftGeoPoint(currentScreen);
+//                startMarker.setPosition(point);
+//                startMarker.setIcon(ContextCompat.getDrawable(ChooseStartingStationActivity.this, R.drawable.map_point));
+//                mMapView.getOverlays().add(startMarker);
+//
+//
+//                Marker startMarker2 = new Marker(mMapView);
+//                startMarker2.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+//                GeoPoint newGp = MapUtils.getBottomRightGeoPoint(currentScreen);
+//                startMarker2.setPosition(newGp);
+//                startMarker2.setIcon(ContextCompat.getDrawable(ChooseStartingStationActivity.this, R.drawable.map_point));
+//
+//                mMapView.getOverlays().add(startMarker2);
             }
         });
 
@@ -253,41 +276,21 @@ public class ChooseStartingStationActivity extends AppCompatActivity {
     }
 
     /**
-     * Parsing json into arraylist
-     * from response data
+     * Called according to result of response to get stations
+     * @param json testing json string
      */
-    public void parseStationsNearMeIntoArrayList() {
-        geoPoints = new ArrayList<>();
+    public void onClientPostResult(String json) {
+        if (json == null) return;
 
-        String strArray = getJsonArrayString();
-
-        try {
-            JSONArray jsonArray = new JSONArray(strArray);
-
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject location = jsonArray.getJSONObject(i).getJSONObject("location");
-
-                double longitude = location.getDouble("longitude");
-                double latitude = location.getDouble("latitude");
-
-                GeoPoint gp = new GeoPoint(latitude, longitude);
-
-                geoPoints.add(gp);
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        Log.d(TAG, "onClientPostResult: " + json);
     }
+
 
     /**
      * Parsing json into arraylist of {@link Station}
      * from response data
      */
     public void parseStationsNearMeIntoArrayList(boolean parseForStations) {
-        if (!parseForStations) {
-            parseStationsNearMeIntoArrayList();
-            return;
-        }
 
         stationsNearMe = new ArrayList<>();
 
