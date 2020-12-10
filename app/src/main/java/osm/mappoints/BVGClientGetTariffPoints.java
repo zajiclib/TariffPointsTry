@@ -1,13 +1,16 @@
+
 package osm.mappoints;
 
 
 import android.util.Log;
 import android.widget.Toast;
+
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.osmdroid.util.GeoPoint;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -21,7 +24,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class BVGClientGetStations implements Callback {
+public class BVGClientGetTariffPoints implements Callback {
 
     private static final String TAG = "BvgClientGetStations";
     private static final String LOG_TAG = "bvgclientgetstations";
@@ -32,42 +35,30 @@ public class BVGClientGetStations implements Callback {
     private static final MediaType MEDIA_TYPE_JSON = MediaType.get("application/json; charset=utf-8");
 
     // Request parameters
-    private static final String KEY_PARAMETER_LOCATION = "location";
-    private static final String KEY_PARAMETER_LONGITUDE = "longitude";
-    private static final String KEY_PARAMETER_LATITUDE = "latitude";
-    private static final String KEY_PARAMETER_RADIUS = "radius";
+    public static final String KEY_PARAMETER_LOCATION = "location";
+    public static final String KEY_PARAMETER_LONGITUDE = "longitude";
+    public static final String KEY_PARAMETER_LATITUDE = "latitude";
+    public static final String KEY_PARAMETER_RADIUS = "radius";
 
 
     // Response parameters
-    private static final String KEY_PARAMETER_TARIFF_POINT_ID = "id";
-    private static final String KEY_PARAMETER_TARIFF_POINT_NAME = "name";
-    private static final String KEY_PARAMETER_ZONE_DESCRIPTION = "zoneShortDescription";
+    public static final String KEY_PARAMETER_TARIFF_POINT_ID = "id";
+    public static final String KEY_PARAMETER_TARIFF_POINT_NAME = "name";
+    public static final String KEY_PARAMETER_ZONE_DESCRIPTION = "zoneShortDescription";
 
 
     private OkHttpClient okHttpClient;
     private ChooseStartingStationActivity activity;
-    private ViewerJSONActivity activity2;
-    private long start;
-    private long finish;
 
 
-
-    public BVGClientGetStations(ChooseStartingStationActivity activity) {
+    public BVGClientGetTariffPoints(ChooseStartingStationActivity activity) {
         this.activity = activity;
-        this.activity2 = null;
-
-    }
-
-    public BVGClientGetStations(ViewerJSONActivity activity) {
-        this.activity = null;
-        this.activity2 = activity;
-        start = System.currentTimeMillis();
     }
 
     /**
      * Call appropriate bvg service provider
      */
-    public void postToBVGToGetStationsNearby() {
+    public void postToBVGToGetStationsNearby(String jsonString) {
         cancelOkHttpClientRequests();
 
         //Create new HTTP REST client
@@ -77,7 +68,7 @@ public class BVGClientGetStations implements Callback {
                 .readTimeout(15, TimeUnit.SECONDS)
                 .build();
 
-        String jsonString = ViewerJSONActivity.buildJsonString();
+//        String jsonString = ViewerJSONActivity.buildJsonString();
         RequestBody postBody = RequestBody.create(jsonString, MEDIA_TYPE_JSON);
 
         //Create Http POST request
@@ -134,49 +125,24 @@ public class BVGClientGetStations implements Callback {
     }
 
     private void handleSuccessFeedback(final ArrayList<Station> receivedStations) {
-        finish = System.currentTimeMillis();
-
-        long elapsedTime = finish - start;
-        Log.d(TAG, "Station(s) successfully received." + "Total elapsed time: " + elapsedTime + "ms");
-
-        if (activity2 == null) {
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(activity, "Response received!", Toast.LENGTH_SHORT).show();
-                    activity.onClientPostResult(receivedStations.toString());
-                }
-            });
-        } else {
-            activity2.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(activity2, "Response received", Toast.LENGTH_SHORT).show();
-                    activity2.onClientPostResult(receivedStations);
-                }
-            });
-        }
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(activity, "Response received!", Toast.LENGTH_SHORT).show();
+                activity.onClientPostResult(receivedStations);
+            }
+        });
     }
 
     private void handleErrorFeedback(final String errorMsg) {
         Log.e(TAG, errorMsg);
 
-        if (activity2 == null) {
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(activity, errorMsg, Toast.LENGTH_SHORT).show();
-                }
-            });
-        } else {
-            activity2.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(activity2, errorMsg, Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(activity, errorMsg, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     /**
