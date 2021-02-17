@@ -446,7 +446,7 @@ public class ChooseStartingStationActivity extends AppCompatActivity {
 
         ArrayList<GeoPoint> generatedPoints = new ArrayList<>(geoPointStringHashMap.keySet());
 
-        Log.d(TAG, "generateTestingGeoPoints: generated points count: " + generatedPoints.size());
+       
 
         return generatedPoints;
     }
